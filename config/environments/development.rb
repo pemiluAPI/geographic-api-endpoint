@@ -26,4 +26,8 @@ GeographicApiEndpoint::Application.configure do
   # This option may cause significant delays in view rendering with a large
   # number of complex assets.
   config.assets.debug = true
+  
+    # PemiluAPI
+  config.pemilu_api_endpoint = "http://pemiluapi.local/candidate"
+  config.pemilu_api_key = "06ec082d057daa3d310b27483cc3962e"
 end

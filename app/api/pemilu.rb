@@ -15,16 +15,24 @@ module Pemilu
               @all_polygon = @all_polygon.where("ST_Intersects(polygon,ST_GeometryFromText('POINT(? ?)',?))",
                   params[:lat].to_f, params[:long].to_f, 4326) unless params[:lat].nil?
               @all_polygon.each do |polygon|
-                  @encode_dapil_url  = URI.encode("http://pemiluapi.local/candidate/api/dapil?apiKey=06ec082d057daa3d310b27483cc3962e&nama=#{polygon.name}")
+                unless params[:lat].nil?
+                  @encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}")
                   @dapil_end = HTTParty.get(@encode_dapil_url, timeout: 500)
                   @dapil = @dapil_end.parsed_response['data']['results']['dapil'].first
-                  @caleg_end = HTTParty.get("http://pemiluapi.local/candidate/api/caleg?apiKey=06ec082d057daa3d310b27483cc3962e&dapil=#{@dapil["id"]}", timeout: 500)
+                  @caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&dapil=#{@dapil["id"]}&lembaga=#{params[:lembaga]}", timeout: 500)
                   @caleg = @caleg_end.parsed_response['data']['results']['caleg']
+                  @search = ["lembaga LIKE ? and partai LIKE ?", "%#{params[:lembaga]}%", "%#{params[:partai]}%"]
                   polygons << {
                     id_polygon: polygon.id,
                     dapil: polygon.name,
                     caleg: @caleg
-                  }              
+                  }
+                else
+                  polygons << {
+                    id_polygon: polygon.id,
+                    dapil: polygon.name,
+                  }
+                end
               end
               {
                 results: {

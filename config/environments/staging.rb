@@ -79,6 +79,6 @@ GeographicApiEndpoint::Application.configure do
   config.log_formatter = ::Logger::Formatter.new
   
   # PemiluAPI
-  config.pemilu_api_endpoint = "http://api.pemiluapi.org/candidate"
-  config.pemilu_api_key = "7b532e4991f255b768a77dbd68915939"
+  config.pemilu_api_endpoint = "http://pemiluapi.stagingapps.net/candidate"
+  config.pemilu_api_key = "c560ad03d85ccb8fdf2167450dc030d9"
 end
