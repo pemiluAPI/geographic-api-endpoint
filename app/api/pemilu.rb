@@ -1,0 +1,39 @@
+# To change this license header, choose License Headers in Project Properties.
+# To change this template file, choose Tools | Templates
+# and open the template in the editor.
+
+module Pemilu
+    class API < Grape::API
+        prefix 'api'
+        format :json
+        resource :polygon do
+            desc "Return all Polygon of Dapils"
+            get do              
+              polygons = Array.new
+              @all_polygon = MapitGeometry.joins(:mapit_area).references(:mapit_area)              
+              .select("mapit_geometry.id, mapit_geometry.area_id, mapit_area.name").order("mapit_geometry.id")
+              @all_polygon = @all_polygon.where("ST_Intersects(polygon,ST_GeometryFromText('POINT(? ?)',?))",
+                  params[:lat].to_f, params[:long].to_f, 4326) unless params[:lat].nil?
+              @all_polygon.each do |polygon|
+                  @encode_dapil_url  = URI.encode("http://pemiluapi.local/candidate/api/dapil?apiKey=06ec082d057daa3d310b27483cc3962e&nama=#{polygon.name}")
+                  @dapil_end = HTTParty.get(@encode_dapil_url, timeout: 500)
+                  @dapil = @dapil_end.parsed_response['data']['results']['dapil'].first
+                  @caleg_end = HTTParty.get("http://pemiluapi.local/candidate/api/caleg?apiKey=06ec082d057daa3d310b27483cc3962e&dapil=#{@dapil["id"]}", timeout: 500)
+                  @caleg = @caleg_end.parsed_response['data']['results']['caleg']
+                  polygons << {
+                    id_polygon: polygon.id,
+                    dapil: polygon.name,
+                    caleg: @caleg
+                  }              
+              end
+              {
+                results: {
+                    count: polygons.count,
+                    polygons: polygons
+                }
+              }
+            end
+        end
+    end
+    
+end
