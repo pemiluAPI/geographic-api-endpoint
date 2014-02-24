@@ -39,6 +39,25 @@ gem 'postgis_adapter'
 
 gem 'httparty'
 
+group :test, :development do
+  gem "rspec-rails", "~> 2.4"
+  gem "sqlite3", "~> 1.3.7"
+end
+
+gem 'factory_girl_rails', "~> 4.2.1"
+gem 'simplecov', :require => false, :group => :test
+
+gem 'thin', "~> 1.5.1"
+gem 'rake', "~> 10.1.0"
+gem 'capistrano', "~> 3.1.0"
+gem 'capistrano-bundler'
+gem 'capistrano-rails'
+gem 'capistrano-rbenv', github: "capistrano/rbenv"
+
+group :production, :development do
+  gem 'newrelic_rpm'
+end
+
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.1.2'
 
