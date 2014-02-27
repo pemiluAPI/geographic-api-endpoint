@@ -22,7 +22,10 @@ class MapitGeometry < ActiveRecord::Base
           polygons << {
             id_polygon: polygon.id,
             "#{field}" => polygon.name,
-            caleg: caleg
+            caleg_results: {
+              count: caleg.count,
+              caleg: caleg              
+            }
           }
           else
             polygons << {
@@ -44,7 +47,10 @@ class MapitGeometry < ActiveRecord::Base
             polygons << {
               id_polygon: polygon.id,
               "#{field}" => polygon.name,
-              caleg: caleg
+              caleg_results: {
+                count: caleg.count,
+                caleg: caleg              
+              }
             }
           else                  
             polygons << {
@@ -66,7 +72,10 @@ class MapitGeometry < ActiveRecord::Base
           polygons << {
             id_polygon: polygon.id,
             "#{field}" => polygon.name,
-            caleg: caleg
+            caleg_results: {
+              count: caleg.count,
+              caleg: caleg              
+            }
           }
           else
             polygons << {
@@ -88,7 +97,10 @@ class MapitGeometry < ActiveRecord::Base
               polygons << {
                 id_polygon: polygon.id,
                 "#{field}" => polygon.name,
-                caleg: caleg
+                caleg_results: {
+                  count: caleg.count,
+                  caleg: caleg              
+                }
               }
             else
               polygons << {
@@ -107,7 +119,10 @@ class MapitGeometry < ActiveRecord::Base
               polygons << {
                 id_polygon: polygon.id,
                 "#{field}" => polygon.name,
-                caleg: caleg
+                caleg_results: {
+                  count: caleg.count,
+                  caleg: caleg              
+                }
               }
             else                  
               polygons << {
@@ -126,7 +141,10 @@ class MapitGeometry < ActiveRecord::Base
               polygons << {
                 id_polygon: polygon.id,
                 "#{field}" => polygon.name,
-                caleg: caleg
+                caleg_results: {
+                  count: caleg.count,
+                  caleg: caleg              
+                }
               }
             else                  
               polygons << {
