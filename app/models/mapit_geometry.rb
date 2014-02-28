@@ -196,19 +196,21 @@ class MapitGeometry < ActiveRecord::Base
       end
       unless first_area.empty?
         area = MapitArea.where("lower(name) = ?", first_area["nama_lengkap"].downcase).first
-        all_polygon = MapitGeometry.select("ST_AsGeoJson(polygon)").order("mapit_geometry.id").where("area_id = ?", area.id)        
-        all_polygon.each do |polygon|
-          coord << polygon.st_asgeojson.gsub(/[\u0022]/,'')
-        end
-        kind = area.type_id == 5 ? "Provinsi" : "Dapil"
-        lembaga = area.type_id == 5 ? "DPD" : first_area["nama_lembaga"]
-        details_area << {
-          kind: kind,
-          id: first_area["id"],
-          nama: first_area["nama_lengkap"],
-          lembaga: lembaga,
-          coordinates: coord
-        }    
+        unless area.nil?
+          all_polygon = MapitGeometry.select("ST_AsGeoJson(ST_Union(polygon))").where("area_id = ?", area.id)        
+          all_polygon.each do |polygon|
+            coord << polygon.st_asgeojson.gsub(/[\u0022]/,'')
+          end
+          kind = area.type_id == 5 ? "Provinsi" : "Dapil"
+          lembaga = area.type_id == 5 ? "DPD" : first_area["nama_lembaga"]
+          details_area << {
+            kind: kind,
+            id: first_area["id"],
+            nama: first_area["nama_lengkap"],
+            lembaga: lembaga,
+            coordinates: coord
+          }
+        end        
       end        
     end
 end
