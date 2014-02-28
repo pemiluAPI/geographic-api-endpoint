@@ -12,11 +12,38 @@ module Pemilu
             polygons = MapitGeometry.find_all_data(params)
               {
                 results: {
-                    count: polygons.count,
-                    polygons: polygons
+                  count: polygons.count,
+                  polygons: polygons
                 }
               }
             end
+        end
+        resource :point do
+          desc "Return all Dapil/Provinsi based on point"
+          get do
+            areas = MapitGeometry.find_all_data_by_point(params)
+            {
+              results: {
+                count: areas.count,
+                total: areas.count,
+                areas: areas
+              }
+            }
+          end
+        end
+        resource :area do
+          desc "Return details of Area by Area Id"
+          params do
+            requires :id, type: String, desc: "Area Id."
+          end
+          route_param :id do
+            get do
+              details_area = MapitGeometry.find_details_area(params)
+              {
+                results: details_area
+              }
+            end
+          end
         end
     end
     
