@@ -11,10 +11,7 @@ module Pemilu
             get do              
             polygons = MapitGeometry.find_all_data(params)
               {
-                results: {
-                  count: polygons.count,
-                  polygons: polygons
-                }
+                results: polygons                
               }
             end
         end

@@ -32,7 +32,7 @@ class MapitGeometry < ActiveRecord::Base
     end
   
     def self.find_all_data(params = Hash.new())
-      polygons = Array.new
+      areas = Array.new
       all_polygon = MapitGeometry.joins(:mapit_area).references(:mapit_area)              
       .select("mapit_geometry.id, mapit_geometry.area_id, mapit_area.name,mapit_area.type_id").order("mapit_geometry.id")
       all_polygon = all_polygon.where("ST_Intersects(polygon,ST_GeometryFromText('POINT(? ?)',?))",
@@ -40,126 +40,127 @@ class MapitGeometry < ActiveRecord::Base
       if params[:lembaga] == "DPR"
         all_polygon = all_polygon.where("mapit_area.type_id = ?",4)
         all_polygon.each do |polygon|
-          field = "dapil DPR"
+          caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
+          dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
+          kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
+          lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]
           unless params[:lat].nil?            
-            caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-            polygons << {
-              id_polygon: polygon.id,
-              "#{field}" => polygon.name,
-              caleg_results: {
-                count: caleg.count,
-                caleg: caleg
-              }
+            areas << {
+              kind: kind,
+              lembaga: lembaga,
+              id: dapil_prov["id"],
+              nama: polygon.name,
+              count: caleg.count,
+              total: caleg.count,
+              caleg: caleg              
             }
           else
-            polygons << {
-              id_polygon: polygon.id,
-              "#{field}" => polygon.name
+            areas << {
+              kind: kind,
+              lembaga: lembaga,
+              id: dapil_prov["id"],
+              nama: polygon.name
             }
           end
         end
       elsif params[:lembaga] == "DPD"
         all_polygon = all_polygon.where("mapit_area.type_id = ?",5)
         all_polygon.each do |polygon|
-          field = "provinsi DPD"
-          unless params[:lat].nil? 
-            caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-            polygons << {
-              id_polygon: polygon.id,
-              "#{field}" => polygon.name,
-              caleg_results: {
-                count: caleg.count,
-                caleg: caleg
-              }
+          caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
+          dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
+          kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
+          lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]
+          unless params[:lat].nil?           
+            areas << {
+              kind: kind,
+              lembaga: lembaga,
+              id: dapil_prov["id"],
+              nama: polygon.name,
+              count: caleg.count,
+              total: caleg.count,
+              caleg: caleg
             }
           else                  
-            polygons << {
-              id_polygon: polygon.id,
-              "#{field}" => polygon.name
+            areas << {
+              kind: kind,
+              lembaga: lembaga,
+              id: dapil_prov["id"],
+              nama: polygon.name
             }
           end
         end
       elsif params[:lembaga] == "DPRDI"
         all_polygon = all_polygon.where("mapit_area.type_id = ?",6)
         all_polygon.each do |polygon|
-          field = "dapil DPRDI"
-          unless params[:lat].nil?                  
-          caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)          
-          polygons << {
-            id_polygon: polygon.id,
-            "#{field}" => polygon.name,
-            caleg_results: {
+          caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
+          dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
+          kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
+          lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]
+          unless params[:lat].nil?          
+          areas << {
+              kind: kind,
+              lembaga: lembaga,
+              id: dapil_prov["id"],
+              nama: polygon.name,
               count: caleg.count,
+              total: caleg.count,
               caleg: caleg
-            }
           }
           else
-            polygons << {
-              id_polygon: polygon.id,
-              "#{field}" => polygon.name
+            areas << {
+              kind: kind,
+              lembaga: lembaga,
+              id: dapil_prov["id"],
+              nama: polygon.name
             }
           end
         end
       else
         all_polygon.each do |polygon|
-          if polygon.type_id == 4
-            field = "dapil DPR"
-            unless params[:lat].nil?                  
-              caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-              polygons << {
-                id_polygon: polygon.id,
-                "#{field}" => polygon.name,
-                caleg_results: {
-                  count: caleg.count,
-                  caleg: caleg
-                }
+          caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
+          dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
+          if polygon.type_id == 4 || polygon.type_id == 6
+            unless params[:lat].nil?              
+              areas << {
+                kind: "Dapil",
+                lembaga: dapil_prov["nama_lembaga"],
+                id: dapil_prov["id"],
+                nama: polygon.name,
+                count: caleg.count,
+                total: caleg.count,
+                caleg: caleg
               }
             else
-              polygons << {
-                id_polygon: polygon.id,
-                "#{field}" => polygon.name
+              areas << {
+                kind: "Dapil",
+                lembaga: dapil_prov["nama_lembaga"],
+                id: dapil_prov["id"],
+                nama: polygon.name,
               }
             end
           elsif polygon.type_id == 5
-            field = "provinsi DPD"
-            unless params[:lat].nil? 
-              caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-              polygons << {
-                id_polygon: polygon.id,
-                "#{field}" => polygon.name,
-                caleg_results: {
-                  count: caleg.count,
-                  caleg: caleg
-                }
+            unless params[:lat].nil?
+              areas << {
+                kind: "Provinsi",
+                lembaga: "DPD",
+                id: dapil_prov["id"],
+                nama: polygon.name,
+                count: caleg.count,
+                total: caleg.count,
+                caleg: caleg
               }
             else                  
-              polygons << {
-                id_polygon: polygon.id,
-                "#{field}" => polygon.name
+              areas << {
+                kind: "Provinsi",
+                lembaga: "DPD",
+                id: dapil_prov["id"],
+                nama: polygon.name,
               }
-            end
-            elsif polygon.type_id == 6
-            field = "Dapil DPRDI"
-            unless params[:lat].nil? 
-              caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-              polygons << {
-                id_polygon: polygon.id,
-                "#{field}" => polygon.name,
-                caleg_results: {
-                  count: caleg.count,
-                  caleg: caleg
-                }
-              }
-            else                  
-              polygons << {
-                id_polygon: polygon.id,
-                "#{field}" => polygon.name
-              }
-            end
+            end          
           end
         end
       end
-      polygons
+      areas
     end
     
     def self.find_all_data_by_point(params = Hash.new())
@@ -184,7 +185,6 @@ class MapitGeometry < ActiveRecord::Base
     
     def self.find_details_area(params=Hash.new())
       details_area = Array.new
-      coord = Array.new
       first_area = Array.new
       dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil/#{params[:id]}?apiKey=#{Rails.configuration.pemilu_api_key}")
       dapil_end = HTTParty.get(dapil_url, timeout: 500)
