@@ -187,19 +187,20 @@ class MapitGeometry < ActiveRecord::Base
       coord = Array.new
       first_area = Array.new
       dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil/#{params[:id]}?apiKey=#{Rails.configuration.pemilu_api_key}")
-      dapil_end = HTTParty.get(dapil_url, timeout: 500)      
+      dapil_end = HTTParty.get(dapil_url, timeout: 500)
       first_area = dapil_end.parsed_response['data']['results']['dapil'].first unless dapil_end.parsed_response['data'].nil?      
       if first_area.empty?
-        provinsi_url = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/provinsi/#{params[:id].to_i}?apiKey=#{Rails.configuration.pemilu_api_key}")
+        provinsi_url = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/provinsi/#{params[:id].to_i}?apiKey=#{Rails.configuration.pemilu_api_key}")        
         provinsi_end = HTTParty.get(provinsi_url, timeout: 500)
         first_area = provinsi_end.parsed_response['data']['results']['provinsi'].first unless provinsi_end.parsed_response['data'].nil?
       end
       unless first_area.empty?
         area = MapitArea.where("lower(name) = ?", first_area["nama_lengkap"].downcase).first
         unless area.nil?
-          all_polygon = MapitGeometry.select("ST_AsGeoJson(ST_Union(polygon))").where("area_id = ?", area.id)        
+          all_polygon = MapitGeometry.select("ST_AsGeoJson(ST_Union(polygon))").where("area_id = ?", area.id)
           all_polygon.each do |polygon|
-            coord << polygon.st_asgeojson.gsub(/[\u0022]/,'')
+            @type = JSON.parse(polygon.st_asgeojson)['type']
+            @coord = JSON.parse(polygon.st_asgeojson)['coordinates'].to_s
           end
           kind = area.type_id == 5 ? "Provinsi" : "Dapil"
           lembaga = area.type_id == 5 ? "DPD" : first_area["nama_lembaga"]
@@ -208,7 +209,8 @@ class MapitGeometry < ActiveRecord::Base
             id: first_area["id"],
             nama: first_area["nama_lengkap"],
             lembaga: lembaga,
-            coordinates: coord
+            type: @type,
+            coordinates: @coord
           }
         end        
       end        
