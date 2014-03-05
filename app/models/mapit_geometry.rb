@@ -170,13 +170,6 @@ class MapitGeometry < ActiveRecord::Base
             type: @type,
             coordinates: @coord
           }
-          if params[:type] == "geojson"
-            features = @coord
-            details_area << {
-              type: "FeatureCollection",
-              features: features
-            }
-          end
         end        
       end        
     end
