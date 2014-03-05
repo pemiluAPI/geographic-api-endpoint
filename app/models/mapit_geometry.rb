@@ -144,6 +144,8 @@ class MapitGeometry < ActiveRecord::Base
     def self.find_details_area(params=Hash.new())
       details_area = Array.new
       first_area = Array.new
+      features = Array.new
+      geojson_format = Array.new
       dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil/#{params[:id]}?apiKey=#{Rails.configuration.pemilu_api_key}")
       dapil_end = HTTParty.get(dapil_url, timeout: 500)
       first_area = dapil_end.parsed_response['data']['results']['dapil'].first unless dapil_end.parsed_response['data'].nil?      
@@ -161,15 +163,37 @@ class MapitGeometry < ActiveRecord::Base
             @coord = JSON.parse(polygon.st_asgeojson)['coordinates']
           end
           kind = area.type_id == 5 ? "Provinsi" : "Dapil"
-          lembaga = area.type_id == 5 ? "DPD" : first_area["nama_lembaga"]
-          details_area << {
-            kind: kind,
-            id: first_area["id"],
-            nama: first_area["nama_lengkap"],
-            lembaga: lembaga,
-            type: @type,
-            coordinates: @coord
-          }
+          lembaga = area.type_id == 5 ? "DPD" : first_area["nama_lembaga"]          
+          if params[:type] == "geojson"
+            features << {
+              type: "Feature",
+              properties: {
+                kind: kind,
+                id: first_area["id"],
+                nama: first_area["nama_lengkap"],
+                lembaga: lembaga,
+              },
+              geometry: {
+                type: @type,
+                coordinates: @coord
+              }
+            }
+              details_area << {
+                type: "FeatureCollection",
+                features: features
+            }
+          elsif params[:type] == "topojson"
+            
+          else
+            details_area << {
+              kind: kind,
+              id: first_area["id"],
+              nama: first_area["nama_lengkap"],
+              lembaga: lembaga,
+              type: @type,
+              coordinates: @coord
+            }
+          end
         end        
       end        
     end
