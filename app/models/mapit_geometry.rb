@@ -158,7 +158,7 @@ class MapitGeometry < ActiveRecord::Base
           all_polygon = MapitGeometry.select("ST_AsGeoJson(ST_Union(polygon))").where("area_id = ?", area.id)
           all_polygon.each do |polygon|
             @type = JSON.parse(polygon.st_asgeojson)['type']
-            @coord = JSON.parse(polygon.st_asgeojson)['coordinates'].to_s
+            @coord = JSON.parse(polygon.st_asgeojson)['coordinates']
           end
           kind = area.type_id == 5 ? "Provinsi" : "Dapil"
           lembaga = area.type_id == 5 ? "DPD" : first_area["nama_lembaga"]
@@ -170,6 +170,13 @@ class MapitGeometry < ActiveRecord::Base
             type: @type,
             coordinates: @coord
           }
+          if params[:type] == "geojson"
+            features = @coord
+            details_area << {
+              type: "FeatureCollection",
+              features: features
+            }
+          end
         end        
       end        
     end
