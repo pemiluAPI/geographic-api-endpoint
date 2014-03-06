@@ -145,7 +145,7 @@ class MapitGeometry < ActiveRecord::Base
       details_area = Array.new
       first_area = Array.new
       features = Array.new
-      geojson_format = Array.new
+      arr_coord = Array.new
       dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil/#{params[:id]}?apiKey=#{Rails.configuration.pemilu_api_key}")
       dapil_end = HTTParty.get(dapil_url, timeout: 500)
       first_area = dapil_end.parsed_response['data']['results']['dapil'].first unless dapil_end.parsed_response['data'].nil?      
@@ -183,7 +183,44 @@ class MapitGeometry < ActiveRecord::Base
                 features: features
             }
           elsif params[:type] == "topojson"
-            
+            scale = [2,2]
+            translate = [1,1]
+            arcs = Array.new            
+            all_polygon.each do |polygon|
+              arr_coord = JSON.parse(polygon.st_asgeojson)['coordinates']              
+              arr_coord.each do |coords|
+                @coor = coords
+              end
+              @coor.each_with_index do |coor, index|
+                @arc = (coor[0] - translate[0])/scale[0],(coor[1] - translate[1])/scale[1]                
+                
+                if (index != 0)
+                  temp = arcs[index-1]
+                  
+                  @arc[0] = @arc[0] - temp[0]
+                  @arc[1] = @arc[1] - temp[1]
+                end
+                
+                
+                arcs << @arc
+                #raise arcs.inspect
+              end              
+            end
+            details_area << {
+              type: "Topology",
+              transform: {
+                scale: scale,
+                translate: translate,
+              },
+              object: {
+                type: "GeometryCollection",
+                geometries:  [{
+                  type: @type,
+                  arcs: "[[0]]",
+                }]
+              },
+              arcs: arcs
+            }
           else
             details_area << {
               kind: kind,
@@ -196,5 +233,12 @@ class MapitGeometry < ActiveRecord::Base
           end
         end        
       end        
+    end
+    def self.get_file_data(params=Hash.new())
+      unless params[:filename].nil?
+        file_url = HTTParty.get("#{Rails.configuration.file_url}/#{params[:filename]}")        
+        results = file_url.parsed_response if (file_url.code == 200)
+      end
+      results.gsub(/[\u0022]/,'')
     end
 end

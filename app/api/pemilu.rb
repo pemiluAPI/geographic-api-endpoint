@@ -6,7 +6,7 @@ module Pemilu
     class API < Grape::API
         prefix 'api'
         format :json
-        resource :polygon do
+        resource :caleg do
             desc "Return all Polygon of Dapils"
             get do              
             polygons = MapitGeometry.find_all_data(params)
@@ -40,6 +40,12 @@ module Pemilu
                 results: details_area
               }
             end
+          end
+        end
+        resource :getfile do
+        desc "Return data from file"         
+          get do
+            results = MapitGeometry.get_file_data(params)            
           end
         end
     end
