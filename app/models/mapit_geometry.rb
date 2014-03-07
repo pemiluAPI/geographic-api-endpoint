@@ -155,7 +155,7 @@ class MapitGeometry < ActiveRecord::Base
       first_area = Array.new
       features = Array.new
       arr_coord = Array.new
-      dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil/#{params[:id]}?apiKey=#{Rails.configuration.pemilu_api_key}")     
+      dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil/#{params[:id]}?apiKey=#{Rails.configuration.pemilu_api_key}")
       dapil_end = HTTParty.get(dapil_url, timeout: 500)
       first_area = dapil_end.parsed_response['data']['results']['dapil'].first unless dapil_end.parsed_response['data'].nil?      
       if first_area.empty?
@@ -163,7 +163,6 @@ class MapitGeometry < ActiveRecord::Base
         provinsi_end = HTTParty.get(provinsi_url, timeout: 500)
         first_area = provinsi_end.parsed_response['data']['results']['provinsi'].first unless provinsi_end.parsed_response['data'].nil?
       end
-      #raise first_area["lembaga"].inspect
       unless first_area.empty?
         if first_area["nama_lembaga"] == "DPR"
           area = MapitArea.where("lower(name) = ? and type_id = ?", first_area["nama_lengkap"].downcase, 4).first
