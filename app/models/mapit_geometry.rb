@@ -39,7 +39,7 @@ class MapitGeometry < ActiveRecord::Base
         all_polygon = all_polygon.where("ST_Intersects(polygon,ST_GeometryFromText('POINT(? ?)',?))",
             params[:long].to_f, params[:lat].to_f, 4326) unless params[:lat].nil?
         if params[:lembaga] == "DPR"
-          all_polygon = all_polygon.where("mapit_area.type_id = ?",4)
+          all_polygon = all_polygon.where("mapit_area.type_id = ? or type_id = ?",4, 5)
           all_polygon.each do |polygon|
             caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
             dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
