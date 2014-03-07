@@ -155,7 +155,7 @@ class MapitGeometry < ActiveRecord::Base
       first_area = Array.new
       features = Array.new
       arr_coord = Array.new
-      dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil/#{params[:id]}?apiKey=#{Rails.configuration.pemilu_api_key}")
+      dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil/#{params[:id]}?apiKey=#{Rails.configuration.pemilu_api_key}")     
       dapil_end = HTTParty.get(dapil_url, timeout: 500)
       first_area = dapil_end.parsed_response['data']['results']['dapil'].first unless dapil_end.parsed_response['data'].nil?      
       if first_area.empty?
@@ -163,8 +163,15 @@ class MapitGeometry < ActiveRecord::Base
         provinsi_end = HTTParty.get(provinsi_url, timeout: 500)
         first_area = provinsi_end.parsed_response['data']['results']['provinsi'].first unless provinsi_end.parsed_response['data'].nil?
       end
+      #raise first_area["lembaga"].inspect
       unless first_area.empty?
-        area = MapitArea.where("lower(name) = ?", first_area["nama_lengkap"].downcase).first
+        if first_area["nama_lembaga"] == "DPR"
+          area = MapitArea.where("lower(name) = ? and type_id = ?", first_area["nama_lengkap"].downcase, 4).first
+        elsif first_area["nama_lembaga"] == "DPRDI"
+          area = MapitArea.where("lower(name) = ? and type_id = ?", first_area["nama_lengkap"].downcase, 6).first
+        else 
+          area = MapitArea.where("lower(name) = ? and type_id = ?", first_area["nama_lengkap"].downcase, 5).first
+        end
         unless area.nil?
           all_polygon = MapitGeometry.select("ST_AsGeoJson(ST_Union(polygon))").where("area_id = ?", area.id)
           all_polygon.each do |polygon|
@@ -172,7 +179,7 @@ class MapitGeometry < ActiveRecord::Base
             @coord = JSON.parse(polygon.st_asgeojson)['coordinates']
           end
           kind = area.type_id == 5 ? "Provinsi" : "Dapil"
-          lembaga = area.type_id == 5 ? "DPD" : first_area["nama_lembaga"]          
+          lembaga = area.type_id == 5 ? "DPD" : first_area["nama_lembaga"]
           if params[:type] == "geojson"
             features << {
               type: "Feature",
