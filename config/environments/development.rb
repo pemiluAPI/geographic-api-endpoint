@@ -29,6 +29,6 @@ GeographicApiEndpoint::Application.configure do
   
     # PemiluAPI
   config.pemilu_api_endpoint = "http://pemiluapi.local/candidate"
-  config.file_url = "https://raw.github.com/pemiluAPI/peta-caleg/master/map/data"
+  config.file_url = "https://raw.github.com/pemiluAPI/pemilu-data/master/dapil/shapefiles/map_share"
   config.pemilu_api_key = "06ec082d057daa3d310b27483cc3962e"
 end

@@ -42,7 +42,7 @@ module Pemilu
             end
           end
         end
-        resource :getfile do
+        resource :getmap do
         desc "Return data from file"         
           get do
             results = MapitGeometry.get_file_data(params)            
