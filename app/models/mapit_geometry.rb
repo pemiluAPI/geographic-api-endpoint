@@ -4,11 +4,16 @@ class MapitGeometry < ActiveRecord::Base
     belongs_to :mapit_area, foreign_key: "area_id"
     
     def self.get_caleg(polygon, lembaga, type)      
-      if (type == 4 || type == 6)        
-        encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}")
-        dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)        
-        dapil = dapil_end.parsed_response['data']['results']['dapil'].first        
-        caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&dapil=#{dapil["id"]}&lembaga=#{lembaga}", timeout: 500)        
+      if (type == 4)        
+        encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}&lembaga=DPR")
+        dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)
+        dapil = dapil_end.parsed_response['data']['results']['dapil'].first
+        caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&dapil=#{dapil["id"]}&lembaga=DPR", timeout: 500)
+      elsif (type == 6)
+        encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}&lembaga=DPRDI")
+        dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)
+        dapil = dapil_end.parsed_response['data']['results']['dapil'].first
+        caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&dapil=#{dapil["id"]}&lembaga=DPR", timeout: 500)
       elsif (type == 5)
         encode_provinsi_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/provinsi?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}")
         provinsi_end = HTTParty.get(encode_provinsi_url, timeout: 500)
@@ -18,15 +23,19 @@ class MapitGeometry < ActiveRecord::Base
       caleg_end.parsed_response['data']['results']['caleg']
     end
     
-    def self.get_provinsi_and_dapil(polygon, type)      
-      if (type == 4 || type == 6)        
-        encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}")
-        dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)        
+    def self.get_provinsi_and_dapil(polygon, type)
+      if (type == 4)
+        encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}&lembaga=DPR")
+        dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)
+        result = dapil_end.parsed_response['data']['results']['dapil'].first
+      elsif (type == 6)
+        encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}&lembaga=DPRDI")
+        dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)
         result = dapil_end.parsed_response['data']['results']['dapil'].first
       elsif (type == 5)
         encode_provinsi_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/provinsi?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}")
         provinsi_end = HTTParty.get(encode_provinsi_url, timeout: 500)
-        result = provinsi_end.parsed_response['data']['results']['provinsi'].first        
+        result = provinsi_end.parsed_response['data']['results']['provinsi'].first
       end
       result
     end
@@ -39,7 +48,7 @@ class MapitGeometry < ActiveRecord::Base
         all_polygon = all_polygon.where("ST_Intersects(polygon,ST_GeometryFromText('POINT(? ?)',?))",
             params[:long].to_f, params[:lat].to_f, 4326) unless params[:lat].nil?
         if params[:lembaga] == "DPR"
-          all_polygon = all_polygon.where("mapit_area.type_id = ? or type_id = ?",4, 5)
+          all_polygon = all_polygon.where("mapit_area.type_id = ?",4)
           all_polygon.each do |polygon|
             caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
             dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
@@ -79,7 +88,7 @@ class MapitGeometry < ActiveRecord::Base
             caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
             dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
             kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
-            lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]          
+            lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]
             areas << {
                 kind: kind,
                 lembaga: lembaga,
@@ -94,7 +103,7 @@ class MapitGeometry < ActiveRecord::Base
           all_polygon.each do |polygon|
             caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
             dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
-            if polygon.type_id == 4 || polygon.type_id == 6            
+            if polygon.type_id == 4 || polygon.type_id == 6
               areas << {
                 kind: "Dapil",
                 lembaga: dapil_prov["nama_lembaga"],
