@@ -13,7 +13,7 @@ class MapitGeometry < ActiveRecord::Base
         encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}&lembaga=DPRDI")
         dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)
         dapil = dapil_end.parsed_response['data']['results']['dapil'].first
-        caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&dapil=#{dapil["id"]}&lembaga=DPR", timeout: 500)
+        caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&dapil=#{dapil["id"]}&lembaga=DPRDI", timeout: 500)
       elsif (type == 5)
         encode_provinsi_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/provinsi?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}")
         provinsi_end = HTTParty.get(encode_provinsi_url, timeout: 500)
