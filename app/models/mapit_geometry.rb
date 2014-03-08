@@ -18,7 +18,7 @@ class MapitGeometry < ActiveRecord::Base
         encode_provinsi_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/provinsi?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{polygon.name}")
         provinsi_end = HTTParty.get(encode_provinsi_url, timeout: 500)
         provinsi = provinsi_end.parsed_response['data']['results']['provinsi'].first
-        caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&provinsi=#{provinsi["id"]}&lembaga=#{lembaga}", timeout: 500)
+        caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&provinsi=#{provinsi["id"]}&lembaga=DPD", timeout: 500)
       end
       caleg_end.parsed_response['data']['results']['caleg']
     end
@@ -251,9 +251,9 @@ class MapitGeometry < ActiveRecord::Base
     end
     def self.get_file_data(params=Hash.new())
       unless params[:filename].nil?
-        file_url = HTTParty.get("#{Rails.configuration.file_url}/#{params[:filename]}")        
+        file_url = HTTParty.get("#{Rails.configuration.file_url}/#{params[:filename]}")
         results = file_url.parsed_response if (file_url.code == 200)
       end
-      results.gsub(/[\u0022]/,'')
+      JSON.parse(results)
     end
 end
