@@ -99,7 +99,7 @@ class MapitGeometry < ActiveRecord::Base
                 caleg: caleg
             }          
           end      
-        else        
+        elsif params[:lembaga] == nil
           all_polygon.each do |polygon|
             caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
             dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
