@@ -39,6 +39,15 @@ class MapitGeometry < ActiveRecord::Base
       end
       result
     end
+    
+    def self.no_caleg_data()
+      areas = {
+        count: 0,
+        total: 0,
+        caleg: []
+      }
+      areas
+    end
   
     def self.find_all_data(params = Hash.new())
       areas = Array.new
@@ -47,85 +56,93 @@ class MapitGeometry < ActiveRecord::Base
         .select("mapit_geometry.id, mapit_geometry.area_id, mapit_area.name,mapit_area.type_id").order("mapit_geometry.id")
         all_polygon = all_polygon.where("ST_Intersects(polygon,ST_GeometryFromText('POINT(? ?)',?))",
             params[:long].to_f, params[:lat].to_f, 4326) unless params[:lat].nil?
-        if params[:lembaga] == "DPR"
-          all_polygon = all_polygon.where("mapit_area.type_id = ?",4)
-          all_polygon.each do |polygon|
-            caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-            dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
-            kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
-            lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]
+        unless all_polygon.empty?
+          if params[:lembaga] == "DPR"
+            all_polygon = all_polygon.where("mapit_area.type_id = ?",4)
+            all_polygon.each do |polygon|
+              caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
+              dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
+              kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
+              lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]
 
-              areas << {
-                kind: kind,
-                lembaga: lembaga,
-                id: dapil_prov["id"],
-                nama: polygon.name,
-                count: caleg.count,
-                total: caleg.count,
-                caleg: caleg              
-              }          
-          end
-        elsif params[:lembaga] == "DPD"
-          all_polygon = all_polygon.where("mapit_area.type_id = ?",5)
-          all_polygon.each do |polygon|
-            caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-            dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
-            kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
-            lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]         
-              areas << {
-                kind: kind,
-                lembaga: lembaga,
-                id: dapil_prov["id"],
-                nama: polygon.name,
-                count: caleg.count,
-                total: caleg.count,
-                caleg: caleg
-              }          
-          end
-        elsif params[:lembaga] == "DPRDI"
-          all_polygon = all_polygon.where("mapit_area.type_id = ?",6)
-          all_polygon.each do |polygon|
-            caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-            dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
-            kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
-            lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]
-            areas << {
-                kind: kind,
-                lembaga: lembaga,
-                id: dapil_prov["id"],
-                nama: polygon.name,
-                count: caleg.count,
-                total: caleg.count,
-                caleg: caleg
-            }          
-          end      
-        elsif params[:lembaga] == nil
-          all_polygon.each do |polygon|
-            caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
-            dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
-            if polygon.type_id == 4 || polygon.type_id == 6
-              areas << {
-                kind: "Dapil",
-                lembaga: dapil_prov["nama_lembaga"],
-                id: dapil_prov["id"],
-                nama: polygon.name,
-                count: caleg.count,
-                total: caleg.count,
-                caleg: caleg
-              }
-            elsif polygon.type_id == 5
-              areas << {
-                kind: "Provinsi",
-                lembaga: "DPD",
-                id: dapil_prov["id"],
-                nama: polygon.name,
-                count: caleg.count,
-                total: caleg.count,
-                caleg: caleg
-              }
+                areas << {
+                  kind: kind,
+                  lembaga: lembaga,
+                  id: dapil_prov["id"],
+                  nama: polygon.name,
+                  count: caleg.count,
+                  total: caleg.count,
+                  caleg: caleg              
+                }          
             end
+          elsif params[:lembaga] == "DPD"
+            all_polygon = all_polygon.where("mapit_area.type_id = ?",5)
+            all_polygon.each do |polygon|
+              caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
+              dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
+              kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
+              lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]         
+                areas << {
+                  kind: kind,
+                  lembaga: lembaga,
+                  id: dapil_prov["id"],
+                  nama: polygon.name,
+                  count: caleg.count,
+                  total: caleg.count,
+                  caleg: caleg
+                }          
+            end
+          elsif params[:lembaga] == "DPRDI"
+            all_polygon = all_polygon.where("mapit_area.type_id = ?",6)
+            all_polygon.each do |polygon|
+              caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
+              dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
+              kind = polygon.type_id == 5 ? "Provinsi" : "Dapil"
+              lembaga = polygon.type_id == 5 ? "DPD" : dapil_prov["nama_lembaga"]
+              areas << {
+                  kind: kind,
+                  lembaga: lembaga,
+                  id: dapil_prov["id"],
+                  nama: polygon.name,
+                  count: caleg.count,
+                  total: caleg.count,
+                  caleg: caleg
+              }          
+            end      
+          elsif params[:lembaga] == nil
+            all_polygon.each do |polygon|
+              caleg = get_caleg(polygon, params[:lembaga], polygon.type_id)
+              dapil_prov = get_provinsi_and_dapil(polygon, polygon.type_id)
+              if polygon.type_id == 4 || polygon.type_id == 6
+                areas << {
+                  kind: "Dapil",
+                  lembaga: dapil_prov["nama_lembaga"],
+                  id: dapil_prov["id"],
+                  nama: polygon.name,
+                  count: caleg.count,
+                  total: caleg.count,
+                  caleg: caleg
+                }
+              elsif polygon.type_id == 5
+                areas << {
+                  kind: "Provinsi",
+                  lembaga: "DPD",
+                  id: dapil_prov["id"],
+                  nama: polygon.name,
+                  count: caleg.count,
+                  total: caleg.count,
+                  caleg: caleg
+                }
+              end
+            end
+          else
+            areas = no_caleg_data()
           end
+        else
+          areas = no_caleg_data()
         end
+      else
+       areas = no_caleg_data()
       end
       areas
     end

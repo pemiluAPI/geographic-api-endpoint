@@ -11,7 +11,7 @@ module Pemilu
             get do              
             polygons = MapitGeometry.find_all_data(params)
               {
-                results: polygons                
+                results: polygons
               }
             end
         end
@@ -45,7 +45,7 @@ module Pemilu
         resource :getmap do
         desc "Return data from file"         
           get do
-            results = MapitGeometry.get_file_data(params)            
+            MapitGeometry.get_file_data(params)
           end
         end
     end
