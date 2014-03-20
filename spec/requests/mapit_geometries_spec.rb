@@ -5,26 +5,26 @@ describe Pemilu::API do
     @dprd1 = create(:dprd1)
     @dprd1geometry1 = create(:dprd1geometry1)
     @dprd1geometry2 = create(:dprd1geometry2)
-  end
+    encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{@dprd1.name}&lembaga=DPRDI")
+    dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)
+    @dapil = dapil_end.parsed_response['data']['results']['dapil'].first
+    caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&dapil=#{@dapil["id"]}&lembaga=DPRDI", timeout: 500)
+    @caleg = caleg_end.parsed_response['data']['results']['caleg']
+  end  
   
   describe "GET /api/caleg?&long=106.77845&lat=-6.224841085" do
     it "Return all areas and related caleg by coordinates" do
-      get "/api/caleg?&long=106.77845&lat=-6.224841085"      
-      encode_dapil_url  = URI.encode("#{Rails.configuration.pemilu_api_endpoint}/api/dapil?apiKey=#{Rails.configuration.pemilu_api_key}&nama=#{@dprd1.name}&lembaga=DPRDI")
-      dapil_end = HTTParty.get(encode_dapil_url, timeout: 500)
-      dapil = dapil_end.parsed_response['data']['results']['dapil'].first
-      caleg_end = HTTParty.get("#{Rails.configuration.pemilu_api_endpoint}/api/caleg?apiKey=#{Rails.configuration.pemilu_api_key}&dapil=#{dapil["id"]}&lembaga=DPRDI", timeout: 500)
-      caleg = caleg_end.parsed_response['data']['results']['caleg']
+      get "/api/caleg?&long=106.77845&lat=-6.224841085"
       response.status.should == 200
       response.body.should == {
         results: [{
           kind: "Dapil",
-          lembaga: dapil["nama_lembaga"],
-          id: dapil["id"],
+          lembaga: @dapil["nama_lembaga"],
+          id: @dapil["id"],
           nama: @dprd1.name,
-          count: caleg.count,
-          total: caleg.count,
-          caleg: caleg
+          count: @caleg.count,
+          total: @caleg.count,
+          caleg: @caleg
         }]
       }.to_json
     end
@@ -37,9 +37,9 @@ describe Pemilu::API do
       response.body.should == {
         results: [{
           kind: "Dapil",
-          id: "3100-10-0000",
+          id: @dapil["id"],
           nama: @dprd1.name,
-          lembaga: "DPRDI",
+          lembaga: @dapil["nama_lembaga"],
           type: "MultiPolygon",
           coordinates: 
               JSON.parse("[[[[106.79815131799998,-6.161383763999878],[106.81065388000013,-6.188723125999957],
@@ -64,9 +64,9 @@ describe Pemilu::API do
           total: 1,
           areas: [{
             kind: "Dapil",
-            id: "3100-10-0000",
+            id: @dapil["id"],
             nama: @dprd1.name,
-            lembaga: "DPRDI"
+            lembaga: @dapil["nama_lembaga"]
           }]
         }
       }.to_json
