@@ -1,6 +1,6 @@
 FactoryGirl.define do
   factory :dprd1, class: MapitArea do
-    name "Gorontalo 1"
+    name "DKI Jakarta 10"
     country_id 4
     parent_area_id nil
     generation_high_id 1
